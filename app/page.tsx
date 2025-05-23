@@ -422,7 +422,7 @@ export default function ScoreTracker() {
   }
 
   const getPlayerTeam = (player: Player) => {
-    const team = teams.find((t) => t.id === player.team) || { color: "#000000" }
+    const team = teams.find((t) => t.id === player.team) || { color: player.color }
     return team
   }
 
@@ -565,7 +565,10 @@ export default function ScoreTracker() {
                             {playersByTeam["no-team"]?.map((player) => (
                               <tr key={player.id} className="border-b">
                                 <td className="p-2 flex items-center">
-                                  <div className="w-3 h-3 rounded-full mr-2 bg-gray-400"></div>
+                                  <div 
+                                    className="w-3 h-3 rounded-full mr-2" 
+                                    style={{ backgroundColor: player.color }}
+                                  ></div>
                                   {player.name}
                                 </td>
                                 {Array.from({ length: Math.max(settings.currentRound, 1) }, (_, i) => (
@@ -760,7 +763,10 @@ export default function ScoreTracker() {
                                               (player) => (
                                                 <tr key={player.id} className="border-b">
                                                   <td className="p-2 flex items-center">
-                                                    <div className="w-3 h-3 rounded-full mr-2 bg-gray-400"></div>
+                                                    <div 
+                                                      className="w-3 h-3 rounded-full mr-2" 
+                                                      style={{ backgroundColor: player.color }}
+                                                    ></div>
                                                     {player.name}
                                                   </td>
                                                   {Array.from(
@@ -781,15 +787,14 @@ export default function ScoreTracker() {
                                       )
                                     } else {
                                       return sortedGamePlayers.map((player) => {
-                                        const team = game.teams?.find((t) => t.id === player.team) || {
-                                          color: "#000000",
-                                        }
+                                        const team = game.teams?.find((t) => t.id === player.team)
+                                        const displayColor = team ? team.color : player.color
                                         return (
                                           <tr key={player.id} className="border-b">
                                             <td className="p-2 flex items-center">
                                               <div
                                                 className="w-3 h-3 rounded-full mr-2"
-                                                style={{ backgroundColor: team.color }}
+                                                style={{ backgroundColor: displayColor }}
                                               ></div>
                                               {player.name}
                                             </td>
@@ -954,55 +959,62 @@ export default function ScoreTracker() {
           {settings.enableTeams && (
             <Card className="mb-4">
               <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Add New Team</Label>
-                    <div className="grid grid-cols-[1fr,auto] gap-2">
-                      <Input
-                        placeholder="Team name"
-                        value={newTeamName}
-                        onChange={(e) => setNewTeamName(e.target.value)}
-                      />
-                      <input
-                        type="color"
-                        value={newTeamColor}
-                        onChange={(e) => setNewTeamColor(e.target.value)}
-                        className="w-10 h-10 rounded border cursor-pointer"
-                      />
-                    </div>
-                    <Button onClick={addTeam} className="w-full">
-                      <Plus className="mr-2 h-4 w-4" /> Add Team
-                    </Button>
-                  </div>
-
-                  {teams.length > 0 && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addTeam()
+                  }}
+                >
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Current Teams</Label>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {teams.map((team) => (
-                          <div key={team.id} className="flex items-center justify-between p-2 border rounded">
-                            <div className="flex items-center">
-                              <div className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: team.color }}></div>
-                              <span>{team.name}</span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive"
-                              onClick={() => {
-                                setTeams(teams.filter((t) => t.id !== team.id))
-                                // Update players who were in this team
-                                setPlayers(players.map((p) => (p.team === team.id ? { ...p, team: null } : p)))
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                      <Label>Add New Team</Label>
+                      <div className="grid grid-cols-[1fr,auto] gap-2">
+                        <Input
+                          placeholder="Team name"
+                          value={newTeamName}
+                          onChange={(e) => setNewTeamName(e.target.value)}
+                        />
+                        <input
+                          type="color"
+                          value={newTeamColor}
+                          onChange={(e) => setNewTeamColor(e.target.value)}
+                          className="w-10 h-10 rounded border cursor-pointer"
+                        />
                       </div>
+                      <Button type="submit" className="w-full">
+                        <Plus className="mr-2 h-4 w-4" /> Add Team
+                      </Button>
                     </div>
-                  )}
-                </div>
+
+                    {teams.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Current Teams</Label>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {teams.map((team) => (
+                            <div key={team.id} className="flex items-center justify-between p-2 border rounded">
+                              <div className="flex items-center">
+                                <div className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: team.color }}></div>
+                                <span>{team.name}</span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-destructive"
+                                onClick={() => {
+                                  setTeams(teams.filter((t) => t.id !== team.id))
+                                  // Update players who were in this team
+                                  setPlayers(players.map((p) => (p.team === team.id ? { ...p, team: null } : p)))
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </form>
               </CardContent>
             </Card>
           )}

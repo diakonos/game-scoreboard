@@ -14,7 +14,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="dba2183e-32b7-4fda-832c-653c1ffe1818"></script>
+      </head>
+      <body>
+        <h1 className='text-3xl font-medium text-center mt-5 mb-5'>Scoreboard</h1>
+        {children}
+        <footer className='text-sm text-center mb-5 mt-5 text-neutral-400'>&copy; {new Date().getFullYear()} Justin Ling. All rights reserved</footer>
+      </body>
     </html>
   )
 }
