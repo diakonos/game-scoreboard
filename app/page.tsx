@@ -150,13 +150,14 @@ export default function ScoreTracker() {
     const savedState = localStorage.getItem("cardGameState")
     if (savedState) {
       try {
-        const { players, settings, teams, gameName, gameHistory, currentGameId } = JSON.parse(savedState)
+        const { players, settings, teams, gameName, gameHistory, currentGameId, gameStarted } = JSON.parse(savedState) // Added gameStarted
         setPlayers(players)
         setSettings(settings)
         setTeams(teams || [])
         setGameName(gameName)
         setGameHistory(gameHistory || [])
         setCurrentGameId(currentGameId)
+        setGameStarted(gameStarted || false) // Load gameStarted state
       } catch (error) {
         console.error("Error loading saved state:", error)
       }
@@ -174,16 +175,18 @@ export default function ScoreTracker() {
         gameName,
         gameHistory,
         currentGameId,
+        gameStarted, // Save gameStarted state
       }),
     )
-  }, [players, settings, teams, gameName, gameHistory, currentGameId])
+  }, [players, settings, teams, gameName, gameHistory, currentGameId, gameStarted]) // Added gameStarted to dependency array
 
   // Get current or total score for a player
   const getPlayerScore = (player: Player): number => {
     if (settings.showPerRoundScores) {
       return player.scores[settings.currentRound - 1] || 0
     } else {
-      return player.scores.reduce((sum, score) => sum + score, 0)
+      // Sum scores up to the current round
+      return player.scores.slice(0, settings.currentRound).reduce((sum, score) => sum + score, 0)
     }
   }
 
@@ -565,8 +568,8 @@ export default function ScoreTracker() {
                             {playersByTeam["no-team"]?.map((player) => (
                               <tr key={player.id} className="border-b">
                                 <td className="p-2 flex items-center">
-                                  <div 
-                                    className="w-3 h-3 rounded-full mr-2" 
+                                  <div
+                                    className="w-3 h-3 rounded-full mr-2"
                                     style={{ backgroundColor: player.color }}
                                   ></div>
                                   {player.name}
@@ -1114,6 +1117,7 @@ export default function ScoreTracker() {
                     currentRound={settings.currentRound}
                     showPerRoundScores={settings.showPerRoundScores}
                     gameStarted={gameStarted}
+                    getPlayerScore={getPlayerScore} // Pass getPlayerScore to PlayerCard
                   />
                 ))}
               </div>
@@ -1134,6 +1138,7 @@ export default function ScoreTracker() {
               currentRound={settings.currentRound}
               showPerRoundScores={settings.showPerRoundScores}
               gameStarted={gameStarted}
+              getPlayerScore={getPlayerScore} // Pass getPlayerScore to PlayerCard
             />
           ))}
         </div>
@@ -1164,9 +1169,11 @@ function PlayerCard({
   updateScore,
   setExactScore,
   showTeam = false,
-  currentRound,
-  showPerRoundScores,
+  currentRound, // This prop is still passed but getPlayerScore will use settings.currentRound
+  showPerRoundScores, // This prop is still passed but getPlayerScore will use settings.showPerRoundScores
   gameStarted,
+  // Add getPlayerScore to props
+  getPlayerScore,
 }: {
   player: Player
   removePlayer: (id: string) => void
@@ -1176,11 +1183,11 @@ function PlayerCard({
   currentRound: number
   showPerRoundScores: boolean
   gameStarted: boolean
+  // Define getPlayerScore in props
+  getPlayerScore: (player: Player) => number
 }) {
-  // Get the current score to display
-  const displayScore = showPerRoundScores
-    ? player.scores[currentRound - 1] || 0
-    : player.scores.reduce((sum, score) => sum + score, 0)
+  // Get the current score to display using the passed getPlayerScore function
+  const displayScore = getPlayerScore(player)
 
   const [editableScore, setEditableScore] = useState(displayScore.toString())
   const [isEditing, setIsEditing] = useState(false)
